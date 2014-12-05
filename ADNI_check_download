@@ -1,0 +1,14 @@
+#!/bin/bash
+
+dir=/tmp/`basename $0`_$$
+
+trap "rm -rf ${dir} ; exit 1" SIGKILL SIGTERM SIGINT SIGQUIT
+rm -rf ${dir}
+mkdir ${dir}
+
+cat *\.csv | cut -d',' -f2 | sed '/Subject/d' | tr -d '"' | sort -n > ${dir}/total.txt
+ls | grep "^..._S_....$" | sort -n > ${dir}/downloaded.txt
+
+diff ${dir}/downloaded.txt ${dir}/total.txt
+
+rm -rf ${dir}

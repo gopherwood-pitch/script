@@ -1,0 +1,25 @@
+#!/bin/bash
+
+if [ ! -d ADNI ] ; then 
+    echo "Error: No ADNI directory." >&2
+    exit 1
+fi
+
+n=`ls ADNI | grep \.csv | wc -l`
+
+if [ $n -eq 0 ] ; then
+    echo "Error: No .csv file in ADNI directory." >&2
+    exit 1
+fi
+
+if [ $n -gt 1 ] ; then
+    echo "Error: More than one .csv file in ADNI directory." >&2
+    exit 1
+fi
+
+dir_name=`ls ADNI | grep \.csv | cut -d'_' -f1`
+
+mv ADNI $dir_name
+
+exit 0
+    

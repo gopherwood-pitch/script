@@ -1,0 +1,44 @@
+#!/bin/bash
+
+project=`basename $0`_$$
+format='png'
+
+file=${project}.txt
+matlab_script=${project}.m
+dir=/tmp/${project}
+
+color='r b g y k'
+type='total used shared buffers cached'
+
+trap 'rm -rf ${dir} ; exit 1' SIGTERM SIGKILL SIGINT SIGQUIT
+
+if [ -d ${dir} ] ; then
+    rm -rf ${dir}
+fi
+mkdir ${dir}
+
+if [ ! -e ~/.memory_usage ] ; then
+    echo "The file ~/.memory_usage does not exist.">&1
+    exit 0
+fi
+
+cat ~/.memory_usage | sed 's/  */ /g' | cut -d' ' -f9-10,12-14 > ${dir}/${file}
+echo "A=dlmread('"${dir}"/"${file}"');" > ${dir}/${matlab_script}
+echo "h=figure;hold on;" >> ${dir}/${matlab_script}
+n=1
+for ram_type in ${type} ; do
+    echo ${ram_type}"=A(:,"$n");" >> ${dir}/${matlab_script}
+    c=`echo ${color} | cut -d' ' -f $n`
+    echo "plot("${ram_type}",'"${c}"');" >> ${dir}/${matlab_script}
+    n=$(($n+1))
+done
+echo "plot(used-cached,'c');" >> ${dir}/${matlab_script}
+echo "xlabel('Time (30s)');ylabel('Usage (MB)');title('RAM Usage');" >> ${dir}/${matlab_script}
+type=$type' used-cached'
+echo "legend('"`echo $type | sed "s/ /','/g"`"','Location','southeastoutside');legend('boxoff');" >> ${dir}/${matlab_script}
+echo "saveas(h,'"${project}"','"${format}"')" >> ${dir}/${matlab_script}
+matlab -nodesktop -nosplash -nodisplay -r "run('${dir}/${matlab_script}') ; exit" 1>/dev/null
+display ${dir}/${project}.${format}
+rm -rf ${dir}
+
+exit 0

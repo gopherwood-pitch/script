@@ -1,0 +1,8 @@
+#!/bin/bash
+
+backup_dir=/media/backup/jacob
+date_str=`date +%Y%m%d_%H%M`
+
+for dir in 'matlab' 'script' ; do
+    cp -r ~/${dir} ${backup_dir}/${dir}_${date_str}
+done

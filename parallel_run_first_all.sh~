@@ -1,0 +1,13 @@
+#!/bin/bash
+
+all_files=`ls`
+
+for file in ${all_files} ; do
+    if [ `echo ${file} | grep '\.'nii$ | wc -l` -eq 0 ] ; then
+	rm -rf ${file}
+    fi
+done
+
+all_files=`ls`
+
+date > .fsl_compute_time.txt ; echo ${all_files} | xargs -n1 -P7 ./.unpack_run_first_all.sh ; date >> .fsl_compute_time.txt 

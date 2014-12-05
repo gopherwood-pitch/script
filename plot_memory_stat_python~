@@ -1,0 +1,51 @@
+#!/bin/bash
+
+project=`basename $0`_$$
+format='png'
+color='r b g y k'
+type='total used shared buffers cached'
+
+dir=/tmp/${project}
+file=${dir}/data.txt
+figure=${dir}/figure.${format}
+script=${dir}/plot_script.py
+
+trap 'rm -rf ${dir} ; exit 1' SIGTERM SIGKILL SIGINT SIGQUIT
+
+if [ -d ${dir} ] ; then
+    rm -rf ${dir}
+fi
+mkdir ${dir}
+
+if [ ! -e ~/.memory_usage ] ; then
+    echo "The file ~/.memory_usage does not exist.">&1
+    exit 0
+fi
+
+echo '#!/usr/bin/python2.7' > ${script}
+echo 'import numpy as np' >> $script
+echo 'import matplotlib.pyplot as plt' >> $script
+cat ~/.memory_usage | sed 's/  */ /g' | cut -d' ' -f9-10,12-14 > ${file}
+echo "A=np.loadtxt('"${file}"',delimiter=' ');" >> ${script}
+echo "fig=plt.figure(figsize=(10,8));plt.hold(True);" >> ${script}
+n=1
+for ram_type in ${type} ; do
+    c=`echo ${color} | cut -d' ' -f $n`
+    echo "plt.plot(A[:,"${n}"-1],'"${c}"');" >> ${script}
+    n=$(($n+1))
+done
+echo "plt.plot(A[:,1]-A[:,4],'c');" >> $script
+echo "plt.xlabel('Time (30s)');plt.ylabel('Usage (MB)');plt.title('RAM Usage');" >> ${script}
+type=$type' used-cached'
+echo "plt.legend(['"`echo $type | sed "s/ /','/g"`"'],loc='center left',bbox_to_anchor=(0.8,0.5));" >> ${script}
+#echo "fig.savefig('"${figure}"');" >> ${script}
+echo "plt.show();" >> ${script} 
+chmod u+x ${script}
+${script}
+if [ $? -ne 0 ] ; then
+    echo "Error: "$script" does not run successfully."
+    exit 1
+fi
+rm -rf ${dir}
+
+exit 0

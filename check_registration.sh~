@@ -1,0 +1,16 @@
+#!/bin/bash
+
+if [ `ls *_to_std_sub.nii.gz 2>/dev/null | wc -l` -eq 0 ] ; then
+    echo "Error: No input files available." 
+    exit 1
+else
+    ${FSLDIR}/bin/slicesdir -p ${FSLDIR}/data/standard/MNI152_T1_1mm.nii.gz *_to_std_sub.nii.gz >> /dev/null
+fi
+
+if [ -f ./slicesdir/index.html ] ; then 
+    firefox ./slicesdir/index.html
+else
+    echo "The file `pwd`/slicesdir/index.html does not exists."
+    exit 1
+fi
+
